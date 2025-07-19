@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>교실 안전 방탈출</title>
+    <style>
+        /* 전체 스타일 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            margin: 20px auto;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            overflow: hidden;
+            display: none; /* 초기에는 숨김 */
+        }
+
+        #room-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 클릭 가능한 오브젝트 스타일 */
+        .object {
+            position: absolute;
+            background-color: transparent; /* 초기 배경색 투명 */
+            cursor: pointer;
+            transition: background-color 0.3s; /* 부드러운 전환 효과 */
+        }
+
+        .object:hover {
+            background-color: rgba(255, 0, 0, 0.3); /* 마우스 호버 시 배경색 */
+        }
+
+        #monitor {
+            top: 40%;
+            left: 30%;
+            width: 80px;
+            height: 50px;
+        }
+
+        #clock {
+            top: 19%;
+            right: 73%;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        #board {
+            top: 25%;
+            left: 50%;
+            width: 150px;
+            height: 80px;
+            transform: translateX(-50%);
+        }
+
+        #bookshelf {
+            top: 40%;
+            right: 25%;
+            width: 70px;
+            height: 150px;
+        }
+
+        #door {
+            bottom: 50%;
+            left: 80%;
+            width: 100px;
+            height: 180px;
+        }
+
+
+        /* 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* 미사일 피하기 게임 스타일 */
+        #missile-game {
+            width: 400px;
+            height: 300px;
+            background-color: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #player {
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .missile {
+            width: 10px;
+            height: 20px;
+            background-color: red;
+            position: absolute;
+            top: 0;
+        }
+
+        #game-message {
+            color: white;
+            font-size: 20px;
+            text-align: center;
+            margin-top: 100px;
+            display: none;
+        }
+
+        /* 시작 화면 스타일 */
+        #start-screen {
+            width: 800px;
+            margin: 50px auto;
+            text-align: center;
+        }
+
+        #start-screen input {
+            margin: 10px;
+            padding: 5px;
+        }
+
+        /* 소요 시간 스타일 */
+        #timer {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 시작 화면 -->
+    <div id="start-screen">
+        <h2>교실 안전 방탈출 게임</h2>
+        <input type="text" id="grade" placeholder="학년">
+        <input type="text" id="class" placeholder="반">
+        <input type="text" id="name" placeholder="이름">
+        <button onclick="startGame()">게임 시작</button>
+    </div>
+
+    <!-- 게임 컨테이너 -->
+    <div id="game-container">
+        <img id="room-image" src="https://i.ibb.co/PvK1FJcb/Whisk-storyboardb57be9d678c6479aaaa93723.jpg" alt="교실 이미지">
+
+        <!-- 클릭 가능한 오브젝트 -->
+        <div class="object" id="monitor"></div>
+        <div class="object" id="clock"></div>
+        <div class="object" id="board"></div>
+        <div class="object" id="bookshelf"></div>
+        <div class="object" id="door"></div>
+
+        <!-- 힌트 컨테이너 -->
+        <div id="hint-container" class="modal">
+            <div class="modal-content">
+                <span class="close-button">×</span>
+                <h2>안전 힌트</h2>
+                <p>소화기 사용법을 확인하세요!</p>
+                <label><input type="radio" name="answer3" value="1"> 1.안전핀 뽑고 손잡이 잡고 불을 향해 분사</label><br>
+                <label><input type="radio" name="answer3" value="2"> 2.손잡이 잡고 안전핀 뽑고 불을 향해 분사</label><br>
+                <label><input type="radio" name="answer3" value="3"> 3. 불을 향해 그냥 분사</label><br>
+                <button onclick="checkAnswer3()">정답 확인</button>
+                <p id="result3"></p>
+                <p id="password-hint3" class="password-hint"></p>
+            </div>
+        </div>
+
+        <!-- 문제 컨테이너 1 -->
+        <div id="puzzle1-container" class="modal">
+            <div class="modal-content">
+                <span class="close-button">×</span>
+                <h2>문제 1</h2>
+                <p>화재 발생 시 가장 먼저 해야 할 일은?</p>
+                <label><input type="radio" name="answer1" value="1"> 1. 불 끄기</label><br>
+                <label><input type="radio" name="answer1" value="2"> 2. 신고하기</label><br>
+                <label><input type="radio" name="answer1" value="3"> 3. 도망가기</label><br>
+                <button onclick="checkAnswer1()">정답 확인</button>
+                <p id="result1"></p>
+                <p id="password-hint1" class="password-hint"></p>
+            </div>
+        </div>
+
+        <!-- 문제 컨테이너 2 -->
+        <div id="puzzle2-container" class="modal">
+            <div class="modal-content">
+                <span class="close-button">×</span>
+                <h2>문제 2</h2>
+                <p>지진 발생 시 책상 아래로 숨는 이유는?</p>
+                <label><input type="radio" name="answer2" value="1"> 1. 따뜻해서</label><br>
+                <label><input type="radio" name="answer2" value="2"> 2. 낙하물로부터 보호</label><br>
+                <label><input type="radio" name="answer2" value="3"> 3. 재미있어서</label><br>
+                <button onclick="checkAnswer2()">정답 확인</button>
+                <p id="result2"></p>
+                <p id="password-hint2" class="password-hint"></p>
+            </div>
+        </div>
+
+        <!-- 미사일 피하기 게임 컨테이너 -->
+        <div id="memory-game-container" class="modal">
+            <div class="modal-content">
+                <span class="close-button">×</span>
+                <h2>미사일 피하기 게임</h2>
+                <div id="missile-game">
+                    <div id="player"></div>
+                    <div id="game-message"></div>
+                </div>
+            </div>
+        </div>
+
+         <!-- 비밀번호 입력 모달 -->
+        <div id="password-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">×</span>
+                <h2>비밀번호 입력</h2>
+                <input type="password" id="password" placeholder="비밀번호를 입력하세요">
+                <button onclick="checkPassword()">탈출 시도</button>
+                <p id="escape-result"></p>
+            </div>
+        </div>
+
+        <!-- 소요 시간 표시 -->
+        <div id="timer">소요 시간: <span id="time-elapsed">00:00</span></div>
+
+    </div>
+
+    <script>
+        let startTime;
+        let timerInterval;
+
+        // 게임 시작 함수
+        function startGame() {
+            const grade = document.getElementById('grade').value;
+            const classValue = document.getElementById('class').value;
+            const name = document.getElementById('name').value;
+
+            if (grade === '' || classValue === '' || name === '') {
+                alert('학년, 반, 이름을 모두 입력해주세요.');
+                return;
+            }
+
+            // 시작 화면 숨기기
+            document.getElementById('start-screen').style.display = 'none';
+
+            // 게임 컨테이너 보이기
+            document.getElementById('game-container').style.display = 'block';
+
+            // 시작 시간 기록
+            startTime = new Date();
+
+            // 타이머 시작
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        // 타이머 업데이트 함수
+        function updateTimer() {
+            const now = new Date();
+            const timeDiff = now.getTime() - startTime.getTime();
+
+            const minutes = Math.floor(timeDiff / 60000);
+            const seconds = Math.floor((timeDiff % 60000) / 1000);
+
+            const formattedMinutes = String(minutes).padStart(2, '0');
+            const formattedSeconds = String(seconds).padStart(2, '0');
+
+            document.getElementById('time-elapsed').innerText = `${formattedMinutes}:${formattedSeconds}`;
+        }
+
+
+        // 오브젝트 요소 가져오기
+        const monitor = document.getElementById('monitor');
+        const clock = document.getElementById('clock');
+        const board = document.getElementById('board');
+        const bookshelf = document.getElementById('bookshelf');
+        const door = document.getElementById('door');
+
+        // 모달 요소 가져오기
+        const hintContainer = document.getElementById('hint-container');
+        const puzzle1Container = document.getElementById('puzzle1-container');
+        const puzzle2Container = document.getElementById('puzzle2-container');
+        const memoryGameContainer = document.getElementById('memory-game-container');
+        const passwordModal = document.getElementById('password-modal');
+
+        // 닫기 버튼 요소 가져오기
+        const closeButtons = document.querySelectorAll('.close-button');
+
+        // 결과 요소 가져오기
+        const result1Text = document.getElementById('result1');
+        const result2Text = document.getElementById('result2');
+        const escapeResult = document.getElementById('escape-result');
+        const passwordHint1 = document.getElementById('password-hint1');
+        const passwordHint2 = document.getElementById('password-hint2');
+        const result3Text = document.getElementById('result3');
+        const passwordHint3 = document.getElementById('password-hint3');
+
+
+        // 비밀번호 입력 요소 가져오기
+        const passwordInput = document.getElementById('password');
+
+        // 모달 닫기 이벤트 리스너 추가
+        closeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                button.closest('.modal').style.display = 'none';
+            });
+        });
+
+        // 오브젝트 클릭 이벤트 리스너 추가
+        monitor.addEventListener('click', () => {
+            hintContainer.style.display = 'block';
+        });
+
+        clock.addEventListener('click', () => {
+            puzzle1Container.style.display = 'block';
+        });
+
+        board.addEventListener('click', () => {
+            puzzle2Container.style.display = 'block';
+        });
+
+        bookshelf.addEventListener('click', () => {
+            memoryGameContainer.style.display = 'block';
+            startGameMissile(); // 미사일 피하기 게임 시작
+        });
+
+        door.addEventListener('click', () => {
+            passwordModal.style.display = 'block';
+        });
+
+         // 문제 정답 확인 함수
+         function checkAnswer3() {
+            const selectedAnswer = document.querySelector('input[name="answer3"]:checked');
+            if (selectedAnswer) {
+                if (selectedAnswer.value === '1') {
+                    result3Text.innerText = '정답입니다!';
+                    passwordHint3.innerText = '비밀번호 힌트: 1'; // 힌트 제공
+                } else {
+                    result3Text.innerText = '오답입니다. 다시 시도하세요.';
+                    passwordHint3.innerText = '';
+                }
+            } else {
+                result3Text.innerText = '선택지를 선택해주세요.';
+                passwordHint3.innerText = '';
+            }
+        }
+
+        // 문제 정답 확인 함수
+        function checkAnswer1() {
+            const selectedAnswer = document.querySelector('input[name="answer1"]:checked');
+            if (selectedAnswer) {
+                if (selectedAnswer.value === '2') {
+                    result1Text.innerText = '정답입니다!';
+                    passwordHint1.innerText = '비밀번호 힌트: 2'; // 힌트 제공
+                } else {
+                    result1Text.innerText = '오답입니다. 다시 시도하세요.';
+                    passwordHint1.innerText = '';
+                }
+            } else {
+                result1Text.innerText = '선택지를 선택해주세요.';
+                passwordHint1.innerText = '';
+            }
+        }
+
+        function checkAnswer2() {
+            const selectedAnswer = document.querySelector('input[name="answer2"]:checked');
+            if (selectedAnswer) {
+                if (selectedAnswer.value === '2') {
+                    result2Text.innerText = '정답입니다!';
+                    passwordHint2.innerText = '비밀번호 힌트: 0'; // 힌트 제공
+                } else {
+                    result2Text.innerText = '오답입니다. 다시 시도하세요.';
+                    passwordHint2.innerText = '';
+                }
+            } else {
+                result2Text.innerText = '선택지를 선택해주세요.';
+                passwordHint2.innerText = '';
+            }
+        }
+
+        // 비밀번호 확인 함수
+        function checkPassword() {
+            const password = passwordInput.value;
+            // 문제 1, 2 정답 시 제공되는 힌트를 조합하여 정답을 확인
+            if (password === '2013') {
+                escapeResult.innerText = '탈출 성공!';
+                clearInterval(timerInterval); // 타이머 멈춤
+            } else {
+                escapeResult.innerText = '탈출 실패!';
+            }
+        }
+
+        // 미사일 피하기 게임 로직
+        const missileGame = document.getElementById('missile-game');
+        const player = document.getElementById('player');
+        const gameMessage = document.getElementById('game-message');
+
+        let playerX = 200;
+        let missiles = [];
+        let gameTimer;
+        let surviveTime = 0;
+
+        function createMissile() {
+            const missile = document.createElement('div');
+            missile.classList.add('missile');
+            missile.style.left = Math.random() * 390 + 'px';
+            missileGame.appendChild(missile);
+            missiles.push(missile);
+
+            moveMissile(missile);
+        }
+
+        function moveMissile(missile) {
+            let top = 0;
+            const interval = setInterval(() => {
+                top += 5;
+                missile.style.top = top + 'px';
+
+                if (top > 300) {
+                    missile.remove();
+                    missiles = missiles.filter(m => m !== missile);
+                    clearInterval(interval);
+                }
+
+                if (checkCollision(missile)) {
+                    gameOver();
+                    clearInterval(interval);
+                }
+            }, 20);
+        }
+
+        function checkCollision(missile) {
+            const playerRect = player.getBoundingClientRect();
+            const missileRect = missile.getBoundingClientRect();
+
+            return !(playerRect.right < missileRect.left ||
+                     playerRect.left > missileRect.right ||
+                     playerRect.bottom < missileRect.top ||
+                     playerRect.top > missileRect.bottom);
+        }
+
+        function gameOver() {
+            clearInterval(gameTimer);
+            gameMessage.innerText = '게임 오버!';
+            gameMessage.style.display = 'block';
+        }
+
+        function gameWin() {
+            clearInterval(gameTimer);
+            gameMessage.innerText = '성공! 힌트: 3';
+            gameMessage.style.display = 'block';
+        }
+
+
+        function startGameMissile() {
+            missileGame.innerHTML = '<div id="player"></div><div id="game-message"></div>';
+            playerX = 200;
+            missiles = [];
+            surviveTime = 0;
+            player = document.getElementById('player');
+            gameMessage = document.getElementById('game-message');
+            player.style.left = playerX + 'px';
+            gameMessage.style.display = 'none';
+
+            gameTimer = setInterval(() => {
+                createMissile();
+                surviveTime++;
+                if (surviveTime >= 10) {
+                    gameWin();
+                    clearInterval(gameTimer);
+                }
+            }, 1000);
+
+            document.addEventListener('keydown', movePlayer);
+        }
+
+        function movePlayer(e) {
+            if (e.key === 'ArrowLeft') {
+                playerX -= 20;
+            } else if (e.key === 'ArrowRight') {
+                playerX += 20;
+            }
+
+            if (playerX < 0) playerX = 0;
+            if (playerX > 380) playerX = 380;
+
+            player.style.left = playerX + 'px';
+        }
+
+    </script>
+</body>
+</html>
